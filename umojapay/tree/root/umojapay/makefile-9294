@@ -1,0 +1,34 @@
+LDIR= ../lib/
+IDIR= /usr/local/92-94-SDK/include/
+IDIR2= ../common/include/
+CC=arm-none-linux-gnueabi-gcc -std=c99 -D_GNU_SOURCE
+INCLUDES= -I $(IDIR) -I $(IDIR2) -I ../92-94/include/ -I ./include/92-94/ -I ./include/
+PLATFORMSRC= ../92-94/src/
+CCFLAGS= $(INCLUDES) -Wunused -Wuninitialized -Os
+
+OUTDIR = bin/
+OBJDIR = obj/
+SRCDIR = src/
+
+LIBRARIES = ../lib/lib91epos.so ../lib/libcurl.so
+LDFLAGS = -w -O2  -L $(LDIR) $(LIBRARIES)
+
+EXEC= $(OUTDIR)umojapay_9294
+
+VPATH = $(PLATFORMSRC) $(SRCDIR)
+OBJS = main_menu.o pay_bill.o commonfuncs.o ppp_api.o common.o umojapay.o mobile_banking.o emv.o agency_banking.o airtime.o county.o bus_park.o authentication.o
+
+OBJFILES = $(addprefix $(OBJDIR), $(OBJS))
+
+default:$(OBJS)
+	$(CC) $(LDFLAGS) -o $(EXEC) $(OBJFILES)
+
+%.o: %.c
+	$(CC) $(CCFLAGS) -c $< -o $(OBJDIR)$@
+	
+clean:
+	rm -rf $(OBJDIR)*.o 
+	rm -rf $(OUTDIR)umojapay_9294*
+	
+image:
+	../common/bin/./newmkapp  $(EXEC) $(EXEC).img

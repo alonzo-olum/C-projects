@@ -1,0 +1,215 @@
+#Copyright (c) 2005- XGD
+#创 建 人: 石玮松    版    本: V0.01    日    期: 2012-09-14
+#writer:shiweisong		version:v0.01		date:2012-09-14
+
+###########################################################################################
+#是否使用C++ 如果不使用直接 IsUseCPP=flase就可以了   #whether to use c++, if not, IsUseCPP=flase
+IsUseCPP=flase
+
+
+
+#如果您有自己的库要加入请在这里加入  #add your own libraries at this place
+#MYDLLS += -L$(POSDIR)/libdev/$(MACHINEMODE)/lib/ -lxgdmaths -lxgdmodule -ldev -lxgdemv
+#MYDLLS +=
+#编译dll完成时会运行下面两个命令	#the following commands will be run after finish compiling dll
+#DllCMD1 = cp ./$(outfilename) -rf $(POSDIR)/sdkLib/$(Sdk_Ver)/"libSdk"$(outfilename)
+#DllCMD2 = cp ./inc/* -r $(sdkIncDir)
+
+#编译exe完成时会运行下面两个命令	#the following commands will be run after finish compiling exe
+#EXECMD1 = cp ./$(outfilename) -rf $(POSDIR)/libdev/CnCupAPI/"libCnCupAPI"$(outfilename)
+#EXECMD2 = cp ./$(outfilename) -rf $(POSDIR)/libdev/CnCupAPI/"libCnCupAPI"$(outfilename)
+
+#----------------------------------------------------------------------#
+#----------------------------------------------------------------------#
+########################上面为配置区		upside is for configuration####################################
+####################下面的代码不建议修改 the following code are suggested not to be modified################################
+#----------------------------------------------------------------------#
+#----------------------------------------------------------------------#
+
+#默认编译输出文件	#the default compilation output file
+outfilename="umojapay_xgd"
+
+
+ifeq ($(debugfalg),debug)
+	DEBUGFLAG = d
+else
+	DEBUGFLAG = r
+endif
+MYLIBS_STATIC =
+MYLIBS_STATIC += $(sdkDir)/"libsdkload-u-$(DEBUGFLAG).a"
+MYLIBS_STATIC += $(sdkDir)/"libsdk-u-$(DEBUGFLAG).a"
+MYLIBS_STATIC += $(sdkDir)/DeviceLib/"libsdkdev-$(MACHINEMODE)-$(DEBUGFLAG).a"
+MYLIBS_STATIC += $(sdkDir)/DeviceLib/libxgdapimap-$(MACHINEMODE).a
+
+LDFLAGS_STATIC = -Wl,-elf2flt
+
+ifeq ($(IsUseCPP),true)
+	MYLIBS_STATIC += /usr/local/arm-elf/lib/libstdc++.a
+endif
+
+INCLUDES= -I ../common/include -I ../XGD/include/ -I ./include/XGD/ -I ./include/
+
+
+#下面把所有文件都归加入了不用再手动加入文件	#the all following files have been added, no need to be added manually
+ALLSRC += $(wildcard ./src/*/*/*.c)
+ALLSRC += $(wildcard ./src/*/*.c)
+ALLSRC += $(wildcard ./src/*.c)
+ALLSRC += $(wildcard ../XGD/src/*.c)
+
+#MYLIBS += "../lib/libcurl.so"
+
+
+ifeq ($(OUT_TARGET), exe)
+    SRC += $(filter-out $(wildcard ./src/syntax/*.c),$(ALLSRC))   	
+#	SRC += $(wildcard ./src/test/*.c)
+#	SRC += $(wildcard ./src/demo/*.c)
+else
+    tem += $(wildcard ./src/test/*.c)								
+	tem += $(wildcard ./src/demo/*.c)								
+	SRC += $(filter-out $(tem),$(ALLSRC))							
+#	SRC += $(wildcard ./src/syntax/*.c)										
+endif
+
+#Let the type char be unsigned, like unsigned char. -funsigned-char
+
+ifeq ($(platform),PPlat)	
+	CFLAGS += -Wno-pointer-sign
+	CFLAGS +=  -Wfloat-equal 
+endif
+
+
+ifeq ($(platform),PPlat)	
+	outfilenametemp = "p-"
+else
+	ifeq ($(platform),KPlat)	
+	outfilenametemp = "k-"
+	else
+	outfilenametemp = $(MACHINEMODE)"-"
+	endif
+endif
+
+
+ifeq ($(debugfalg),debug)
+	outfilename  =$(outfilenametemp)$(OUT_TARGET)"-d.so"				
+else
+	  outfilename =$(outfilenametemp)$(OUT_TARGET)"-r.so"	
+endif
+
+#有符号无符号警告问题 只有P平台 才有这个		#only the p platform have the warning for whether has symbol
+
+
+TARGET = ./bin/$(outfilename)
+
+
+#如果是dll文件 运行相应的命令	#run the corresponding commands if dll file
+ifeq ($(OUT_TARGET),dll)
+	CopyCMD1 = $(DllCMD1)											
+	CopyCMD2 = $(DllCMD2)
+endif
+
+#如果是exe文件 运行相应的命令	#run the corresponding commands if exe file
+ifeq ($(OUT_TARGET),exe)
+	CopyCMD1 = $(EXECMD1)
+	CopyCMD2 = $(EXECMD2)
+endif
+
+#自己头文件所在目录	#the folder for own head files
+CFLAGS += -I$(POSDIR)/$(Folder)/inc
+
+#sdk头文件 只有在非基础sdk的时候才要包含进来	#sdk head files, they are included only when the sdk is not basic
+CFLAGS += -I$(sdkIncDir)
+
+
+#所有加载的动态库内容  Dll 编译是不要加任何动态库	#all the dynamic libraries need to be loaded, there is no need to load any dynamic libraries when compiling Dll
+
+#加载sdk库	#load sdk library
+MYDLLS +=-L$(sdkDir) "-lsdkload"
+
+
+#如果使用C++就要加载C++库	#load c++ library if the c++ is used
+ifeq ($(IsUseCPP),true)
+
+#加上C++编译标志	#add the c++ compiling flag
+ CFLAGS +=  -x c++
+ 
+#K平台和P平台C++库所在的位置是不同的	#the c++ library location for K platform and P platform is different
+	
+ifeq ($(platform),PPlat) 
+	MYDLLS += -L ./opt/freescale/usr/local/gcc-4.1.2-glibc-2.5-nptl-3/arm-none-linux-gnueabi/arm-none-linux-gnueabi/lib/ -lstdc++	
+else	
+	MYDLLS += -L ./usr/local/arm/3.4.1/arm-linux/lib/ -lstdc++	
+endif 	
+
+endif
+
+
+#OBJDIR = $(POSDIR)/$(Folder)/obj/
+OBJS = $(patsubst %.c, %.o, $(SRC))
+#OBJS = $(patsubst ./src/%, %, $(OBJTMP))
+#OBJFILES = $(addprefix $(OBJDIR), $(OBJTMP))
+
+CFLAGS += -Os -s -fomit-frame-pointer -fno-strength-reduce $(INCLUDES) -std=c99
+
+SourceNameEnd=
+ifeq ($(platform),PPlat) 
+		ifeq ($(debugfalg),debug) 
+		SourceNameEnd="-p-d.so"
+		else
+		SourceNameEnd="-p-r.so"
+		endif	
+else
+		ifeq ($(debugfalg),debug) 
+		SourceNameEnd="-k-d.so"
+		else
+		SourceNameEnd="-k-r.so"
+		endif	
+endif
+
+
+SourceName=libsdkload$(SourceNameEnd)
+
+all: aaa $(TARGET) 
+
+aaa:
+
+ifeq ($(platform),UCPlat)
+else
+#首先要把相应机型的文件重命名成 libSdk		#first rename the corresponding model file as libSdk
+	cp $(sdkDir)/$(SourceName) -rf $(sdkDir)/libsdkload.so               
+
+endif
+	
+	for i in  $(dir_y) ;do make -C $$i || exit$? ;done  
+
+$(TARGET) : $(OBJS)
+
+
+ifeq ($(platform),UCPlat)
+	$(CC) $(LDFLAGS_STATIC) -s -o $@ $(OBJS)  $(MYLIBS_STATIC) -lm 
+	arm-elf-flthdr -s 51200 $(TARGET)
+else
+	$(CC) -s -fPIC -lpthread $(LINTFLAG) -o $@ $(OBJS) -ldl -lm $(MYLIBS) $(MYDLLS) ;
+
+ifeq ($(debugfalg),debug)
+	cp -f $(Folder)VerD.ini MenuHellowWorldbak.ini
+else
+	cp -f $(Folder)Ver.ini MenuHellowWorldbak.ini
+endif
+	echo `date +%y%m%d%H%M%S` >> MenuHellowWorldbak.ini
+	echo \n
+	echo [end] >> MenuHellowWorldbak.ini
+	cat MenuHellowWorldbak.ini >> $(outfilename)
+	rm -rf MenuHellowWorldbak.ini
+	
+	$(CopyCMD1)
+	$(CopyCMD2)	
+endif
+
+%.o:%.c
+	$(CC) $(CFLAGS) -o $@ -c $<
+	
+#$(SRC:.c=.o): ./inc/*.h $(INCDIR)/*.h
+$(SRC:.c=.o):    $(POSDIR)/$(Folder)/include/*.h
+clean:
+	-rm -f $(TARGET) $(SYNTAX) *.elf *.gdb *.o */*.o */*/*.o */*/*/*.o
+

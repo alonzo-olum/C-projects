@@ -1,0 +1,32 @@
+/* -----------------------------------------------------------------------------------------------------------------------------------------
+ * UMOJAPAY DEVELOPMENT TREE
+ * @karokidii
+ *------------------------------------------------------------------------------------------------------------------------------------------ */
+ 
+ Directory Structure:
+ 	
+ 	tree								/* Top Level Tree Directory */
+ 		- root							/* Main Tree Root Directory */
+ 			
+ 			- common					/* Includes all files common to both projects */
+ 				+ include				/* All common headers */
+ 				+ lib					/* Common libraries if any */
+ 				+ src					/* Common source files if any */
+ 			
+ 			- ezeal						/* Files needed to compile apps for ezeal machine */
+ 				+ include
+ 				+ lib
+ 				+ src
+ 				
+ 			- gl14						/* Files needed to compile apps for GL14POS machine */
+ 				+ include
+ 				+ lib
+ 				+ src
+ 				
+ 			- umojapay					/* Project files specific to the umojapay project (TRUNK) */
+ 				+ include
+ 				+ lib
+ 				+ src
+ 				+ bin
+ 				+ obj
+ 				  makefile				/* Project makefile */

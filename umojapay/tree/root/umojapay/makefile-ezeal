@@ -1,0 +1,34 @@
+#LIBS = $(shell $(XML2_CONFIG) --libs)
+#INCLUDES = $(shell $(XML2_CONFIG) --cflags)
+CC = arm-none-linux-gnueabi-gcc
+CFLAGS= -Wunused -Wuninitialized -std=c99 -Os
+INCLUDE = -I /usr/local/eZeal/AppWorks/HeaderFiles -I ./include/ -I ./include/ezeal/ -I ../common/include/ -I ../ezeal/include/
+LDLIBS = -lcAppWorks -lsqlite3 -lcrypto -lssl -lcurl 
+
+PLATFORMSRCDIR = ../ezeal/src/
+
+SOURCE= main_menu.c pay_bill.c common.c umojapay.c mobile_banking.c emv.c agency_banking.c airtime.c county.c bus_park.c authentication.c
+PLATFORMSRC = commonfuncs.c
+
+LDPATH= -L /usr/local/eZeal/AppWorks/LibraryFile
+
+OUTDIR = bin/
+SRCDIR = src/
+OBJDIR = obj/
+
+EXEC= $(OUTDIR)umojapay_ezeal
+VPATH = $(SRCDIR) $(PLATFORMSRC)
+
+all: $(EXEC)
+
+$(EXEC):
+	$(CC) $(LDFLAGS) -O $(CFLAGS) -o $@ $(INCLUDE) $(addprefix $(SRCDIR), $(SOURCE)) $(addprefix $(PLATFORMSRCDIR), $(PLATFORMSRC)) $(LDPATH) $(LDLIBS)  -lc -lpthread -lm -lrt -ljpeg -lcrypto
+	arm-none-linux-gnueabi-strip -s $(EXEC)
+	
+clean:
+	-rm -f $(EXEC) $(OBJDIR)*.o $(OUTDIR)*.elf $(OBJDIR)*.gdb
+	
+image:
+	./install_ezeal.sh
+
+

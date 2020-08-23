@@ -1,0 +1,4 @@
+gcc -c -o obj/match.o src/match.c -Iinclude/
+gcc -c -o obj/matchhere.o src/matchhere.c -Iinclude/
+gcc -o matcher obj/matchhere obj/main.o -Iinclude
+./matcher "^.*:a"
