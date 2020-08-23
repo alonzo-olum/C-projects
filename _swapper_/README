@@ -1,0 +1,11 @@
+Swap can be compiled and built by either:
+1.
+
+	gcc -c src/swap.c -I include/
+
+	gcc -o swapper src/main.c swap.o -I include/
+2.
+
+	Using Makefile:
+	- make
+	- make clean
